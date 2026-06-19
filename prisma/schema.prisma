@@ -1,0 +1,547 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+enum Role             { student teacher admin }
+enum ProgressStatus  { locked unlocked in_progress passed completed }
+enum SubmissionStatus { ai_draft teacher_reviewed overridden manual_review }
+enum InstitutionType  { center school individual }
+enum UnlockMode       { sequential open manual }
+enum NotifChannel     { in_app email both }
+enum AchievementCat   { unit skill consistency effort challenge }
+
+model Course {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  subtitle    String?
+  author      String
+  publisher   String?
+  edition     Int      @default(1)
+  isbn        String?
+  coverUrl    String?
+  totalUnits  Int      @default(20)
+  cefrLevel   String?
+  language    String   @default("en")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  units       Unit[]
+  classes     Class[]
+  @@map("courses")
+}
+
+model Unit {
+  id            String        @id @default(cuid())
+  courseId      String
+  unitNumber    Int
+  title         String
+  category      String
+  trackNumber   Int?
+  sortOrder     Int
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  course        Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons       Lesson[]
+  paragraphs    Paragraph[]
+  vocabulary    VocabularyItem[]
+  idioms        Idiom[]
+  grammarTopic  GrammarTopic?
+  writingTask   WritingTask?
+  listeningTask ListeningTask?
+  unitAssignments ClassUnitAssignment[]
+  @@unique([courseId, unitNumber])
+  @@map("units")
+}
+
+model Lesson {
+  id           String          @id @default(cuid())
+  unitId       String
+  lessonNumber Int             @default(1)
+  title        String?
+  sortOrder    Int             @default(1)
+  isActive     Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  unit         Unit            @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  questions    Question[]
+  progress     StudentProgress[]
+  stepAttempts StepAttempt[]
+  @@unique([unitId, lessonNumber])
+  @@map("lessons")
+}
+
+model Paragraph {
+  id        String             @id @default(cuid())
+  unitId    String
+  paraIndex Int
+  content   String
+  wordCount Int
+  hasAudio  Boolean            @default(false)
+  audioUrl  String?
+  glossary  Json               @default("[]")
+  createdAt DateTime           @default(now())
+  unit      Unit               @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  attempts  ParagraphAttempt[]
+  @@unique([unitId, paraIndex])
+  @@map("paragraphs")
+}
+
+model VocabularyItem {
+  id              String   @id @default(cuid())
+  unitId          String
+  stepTypeId      Int
+  word            String
+  definition      String
+  answerKey       String?
+  exampleSentence String?
+  partOfSpeech    String?
+  sortOrder       Int
+  createdAt       DateTime @default(now())
+  unit            Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  @@map("vocabulary_items")
+}
+
+model Idiom {
+  id          String   @id @default(cuid())
+  unitId      String
+  idiom       String
+  meaning     String
+  bookExample String
+  sortOrder   Int      @default(1)
+  createdAt   DateTime @default(now())
+  unit        Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  @@map("idioms")
+}
+
+model GrammarTopic {
+  id          String   @id @default(cuid())
+  unitId      String   @unique
+  topicName   String
+  explanation String
+  examples    Json     @default("[]")
+  createdAt   DateTime @default(now())
+  unit        Unit     @relation(fields: [unitId], references: [id])
+  @@map("grammar_topics")
+}
+
+model WritingTask {
+  id             String   @id @default(cuid())
+  unitId         String   @unique
+  topic          String
+  guideQuestions Json
+  exampleText    String
+  minWords       Int      @default(60)
+  maxWords       Int      @default(150)
+  scoringRubric  Json
+  createdAt      DateTime @default(now())
+  unit           Unit     @relation(fields: [unitId], references: [id])
+  @@map("writing_tasks")
+}
+
+model ListeningTask {
+  id           String   @id @default(cuid())
+  unitId       String   @unique
+  dialogTitle  String
+  trackNumber  Int?
+  audioUrl     String?
+  transcript   String?
+  durationSec  Int?
+  isAudioReady Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  unit         Unit     @relation(fields: [unitId], references: [id])
+  @@map("listening_tasks")
+}
+
+model Question {
+  id            String         @id @default(cuid())
+  lessonId      String
+  stepTypeId    Int
+  questionText  String
+  questionType  String
+  correctAnswer String?
+  explanation   String?
+  paraRef       String?
+  sortOrder     Int
+  mediaUrl      String?
+  createdAt     DateTime       @default(now())
+  lesson        Lesson         @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  options       AnswerOption[]
+  @@map("questions")
+}
+
+model AnswerOption {
+  id         String   @id @default(cuid())
+  questionId String
+  optionKey  String
+  optionText String
+  isCorrect  Boolean  @default(false)
+  sortOrder  Int
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  @@unique([questionId, optionKey])
+  @@map("answer_options")
+}
+
+model Institution {
+  id                    String          @id @default(cuid())
+  name                  String
+  slug                  String          @unique
+  institutionType       InstitutionType @default(center)
+  country               String?
+  timezone              String          @default("UTC")
+  logoUrl               String?
+  maxStudents           Int             @default(50)
+  subscriptionTier      String          @default("basic")
+  subscriptionExpiresAt DateTime?
+  monthlyTokenBudget    Int             @default(1000000)
+  monthlyTokensUsed     Int             @default(0)
+  isActive              Boolean         @default(true)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+  users                 User[]
+  classes               Class[]
+  @@map("institutions")
+}
+
+model User {
+  id                  String    @id @default(cuid())
+  institutionId       String?
+  email               String    @unique
+  passwordHash        String
+  fullName            String
+  displayName         String?
+  avatarUrl           String?
+  preferredLang       String    @default("en")
+  hideFromLeaderboard Boolean   @default(false)
+  emailVerified       Boolean   @default(false)
+  isActive            Boolean   @default(true)
+  lastLoginAt         DateTime?
+  onboardingComplete  Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  institution         Institution?        @relation(fields: [institutionId], references: [id])
+  roles               UserRole[]
+  enrollments         Enrollment[]
+  xpEvents            XpEvent[]
+  xpLedger            XpLedger?
+  streak              Streak?
+  achievements        StudentAchievement[]
+  notifications       Notification[]
+  placementResult     PlacementResult?
+  aiFeedbackLogs      AiFeedbackLog[]
+  teacherClasses      Class[]             @relation("TeacherClasses")
+  writingReviews      WritingSubmission[] @relation("TeacherReviews")
+  @@map("users")
+}
+
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  role      Role
+  grantedBy String?
+  grantedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([userId, role])
+  @@map("user_roles")
+}
+
+model Class {
+  id                 String      @id @default(cuid())
+  institutionId      String
+  teacherId          String
+  courseId           String
+  name               String
+  classCode          String      @unique
+  maxStudents        Int         @default(30)
+  unlockMode         UnlockMode  @default(sequential)
+  allowsVoice        Boolean     @default(false)
+  leaderboardVisible Boolean     @default(true)
+  startDate          DateTime?
+  endDate            DateTime?
+  isActive           Boolean     @default(true)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  institution        Institution @relation(fields: [institutionId], references: [id])
+  teacher            User        @relation("TeacherClasses", fields: [teacherId], references: [id])
+  course             Course      @relation(fields: [courseId], references: [id])
+  enrollments        Enrollment[]
+  unitAssignments    ClassUnitAssignment[]
+  leaderboardSnaps   LeaderboardSnapshot[]
+  @@map("classes")
+}
+
+model Enrollment {
+  id                String             @id @default(cuid())
+  classId           String
+  studentId         String
+  enrolledBy        String?
+  enrolledAt        DateTime           @default(now())
+  status            String             @default("active")
+  completedAt       DateTime?
+  class             Class              @relation(fields: [classId], references: [id], onDelete: Cascade)
+  student           User               @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  progress          StudentProgress[]
+  stepAttempts      StepAttempt[]
+  paragraphAttempts ParagraphAttempt[]
+  xpEvents          XpEvent[]
+  @@unique([classId, studentId])
+  @@map("enrollments")
+}
+
+model ClassUnitAssignment {
+  id         String    @id @default(cuid())
+  classId    String
+  unitId     String
+  isUnlocked Boolean   @default(false)
+  dueDate    DateTime?
+  assignedAt DateTime  @default(now())
+  assignedBy String
+  class      Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  unit       Unit      @relation(fields: [unitId], references: [id])
+  @@unique([classId, unitId])
+  @@map("class_unit_assignments")
+}
+
+model StudentProgress {
+  id             String         @id @default(cuid())
+  enrollmentId   String
+  lessonId       String
+  stepTypeId     Int
+  status         ProgressStatus @default(locked)
+  bestScore      Float?
+  attemptCount   Int            @default(0)
+  firstPassedAt  DateTime?
+  lastAttemptAt  DateTime?
+  timeSpentSec   Int            @default(0)
+  teacherResetAt DateTime?
+  updatedAt      DateTime       @updatedAt
+  enrollment     Enrollment     @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lesson         Lesson         @relation(fields: [lessonId], references: [id])
+  @@unique([enrollmentId, lessonId, stepTypeId])
+  @@map("student_progress")
+}
+
+model StepAttempt {
+  id             String    @id @default(cuid())
+  enrollmentId   String
+  lessonId       String
+  stepTypeId     Int
+  attemptNumber  Int
+  score          Float?
+  passed         Boolean?
+  answers        Json?
+  submissionText String?
+  voiceUrl       String?
+  startedAt      DateTime
+  submittedAt    DateTime?
+  durationSec    Int?
+  isReview       Boolean   @default(false)
+  enrollment     Enrollment        @relation(fields: [enrollmentId], references: [id])
+  lesson         Lesson            @relation(fields: [lessonId], references: [id])
+  writingSubmission WritingSubmission?
+  @@map("step_attempts")
+}
+
+model ParagraphAttempt {
+  id                   String    @id @default(cuid())
+  enrollmentId         String
+  paragraphId          String
+  unitId               String
+  readingStartedAt     DateTime
+  questionShownAt      DateTime?
+  readingDurationSec   Int?
+  answerSubmitted      String?
+  isCorrect            Boolean?
+  attemptNumber        Int       @default(1)
+  aiExplanationShown   Boolean   @default(false)
+  aiExplanationReadSec Int?
+  confidenceRating     String?
+  completionStatus     String    @default("in_progress")
+  xpAwarded            Int       @default(0)
+  audioPlayed          Boolean   @default(false)
+  completedAt          DateTime?
+  enrollment           Enrollment @relation(fields: [enrollmentId], references: [id])
+  paragraph            Paragraph  @relation(fields: [paragraphId], references: [id])
+  @@unique([enrollmentId, paragraphId])
+  @@map("paragraph_attempts")
+}
+
+model WritingSubmission {
+  id               String           @id @default(cuid())
+  attemptId        String           @unique
+  aiScoreContent   Float?
+  aiScoreStructure Float?
+  aiScoreGrammar   Float?
+  aiScoreVocab     Float?
+  aiTotal          Float?
+  aiFeedback       String?
+  aiSuggestions    Json?
+  teacherScore     Float?
+  teacherComment   String?
+  status           SubmissionStatus @default(ai_draft)
+  reviewedBy       String?
+  reviewedAt       DateTime?
+  createdAt        DateTime         @default(now())
+  attempt          StepAttempt      @relation(fields: [attemptId], references: [id])
+  reviewer         User?            @relation("TeacherReviews", fields: [reviewedBy], references: [id])
+  @@map("writing_submissions")
+}
+
+model AiFeedbackLog {
+  id           String   @id @default(cuid())
+  userId       String
+  attemptId    String?
+  feedbackType String
+  promptText   String
+  responseText String
+  modelVersion String
+  tokensUsed   Int?
+  latencyMs    Int?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+  @@map("ai_feedback_logs")
+}
+
+model XpEvent {
+  id           String     @id @default(cuid())
+  userId       String
+  enrollmentId String?
+  xpAmount     Int
+  reason       String
+  sourceId     String?
+  occurredAt   DateTime   @default(now())
+  user         User       @relation(fields: [userId], references: [id])
+  enrollment   Enrollment? @relation(fields: [enrollmentId], references: [id])
+  @@map("xp_events")
+}
+
+model LevelEvent {
+  id         String   @id @default(cuid())
+  userId     String
+  fromLevel  Int
+  toLevel    Int
+  fromTitle  String
+  toTitle    String
+  xpAtEvent  Int
+  occurredAt DateTime @default(now())
+  @@map("level_events")
+}
+
+model Achievement {
+  id          String             @id @default(cuid())
+  code        String             @unique
+  name        String
+  description String
+  category    AchievementCat
+  iconUrl     String?
+  xpReward    Int                @default(0)
+  triggerRule Json
+  isActive    Boolean            @default(true)
+  isSecret    Boolean            @default(false)
+  earnedBy    StudentAchievement[]
+  @@map("achievements")
+}
+
+model AchievementEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  achievementId String
+  triggerSource String?
+  occurredAt    DateTime @default(now())
+  @@map("achievement_events")
+}
+
+model StudentAchievement {
+  userId        String
+  achievementId String
+  earnedAt      DateTime    @default(now())
+  user          User        @relation(fields: [userId], references: [id])
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  @@id([userId, achievementId])
+  @@map("student_achievements")
+}
+
+model XpLedger {
+  userId       String   @id
+  totalXp      Int      @default(0)
+  currentLevel Int      @default(1)
+  levelTitle   String   @default("Reader Rookie")
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id])
+  @@map("xp_ledger")
+}
+
+model Streak {
+  userId                String    @id
+  currentStreak         Int       @default(0)
+  longestStreak         Int       @default(0)
+  lastActiveDate        DateTime?
+  shieldsAvailable      Int       @default(1)
+  shieldsUsedThisWeek   Int       @default(0)
+  comebackActiveUntil   DateTime?
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id])
+  @@map("streaks")
+}
+
+model LeaderboardSnapshot {
+  id        String   @id @default(cuid())
+  classId   String
+  weekStart DateTime
+  rankings  Json
+  createdAt DateTime @default(now())
+  class     Class    @relation(fields: [classId], references: [id])
+  @@unique([classId, weekStart])
+  @@map("leaderboard_snapshots")
+}
+
+model PlacementResult {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  score           Float
+  answers         Json
+  estimatedCefr   String
+  weakAreas       Json     @default("[]")
+  aiProfile       String
+  recommendedPace String   @default("normal")
+  takenAt         DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
+  @@map("placement_results")
+}
+
+model Notification {
+  id        String       @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  data      Json?
+  channel   NotifChannel @default(in_app)
+  isRead    Boolean      @default(false)
+  readAt    DateTime?
+  expiresAt DateTime?
+  createdAt DateTime     @default(now())
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("notifications")
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  tableName     String
+  recordId      String
+  operation     String
+  actorId       String?
+  actorRole     String?
+  oldValues     Json?
+  newValues     Json?
+  changedFields String[]
+  reason        String?
+  occurredAt    DateTime @default(now())
+  @@map("audit_logs")
+}
