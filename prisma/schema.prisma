@@ -8,13 +8,52 @@ datasource db {
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
-enum Role             { student teacher admin }
-enum ProgressStatus  { locked unlocked in_progress passed completed }
-enum SubmissionStatus { ai_draft teacher_reviewed overridden manual_review }
-enum InstitutionType  { center school individual }
-enum UnlockMode       { sequential open manual }
-enum NotifChannel     { in_app email both }
-enum AchievementCat   { unit skill consistency effort challenge }
+enum Role {
+  student
+  teacher
+  admin
+}
+
+enum ProgressStatus {
+  locked
+  unlocked
+  in_progress
+  passed
+  completed
+}
+
+enum SubmissionStatus {
+  ai_draft
+  teacher_reviewed
+  overridden
+  manual_review
+}
+
+enum InstitutionType {
+  center
+  school
+  individual
+}
+
+enum UnlockMode {
+  sequential
+  open
+  manual
+}
+
+enum NotifChannel {
+  in_app
+  email
+  both
+}
+
+enum AchievementCat {
+  unit
+  skill
+  consistency
+  effort
+  challenge
+}
 
 model Course {
   id          String   @id @default(cuid())
