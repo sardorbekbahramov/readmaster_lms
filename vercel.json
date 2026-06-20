@@ -1,12 +1,5 @@
 {
   "version": 2,
-  "functions": {
-    "api/ai/writing/route": { "maxDuration": 30 },
-    "api/ai/reading/route": { "maxDuration": 15 },
-    "api/ai/vocabulary/route": { "maxDuration": 15 },
-    "api/ai/grammar/route": { "maxDuration": 15 },
-    "api/ai/progress/route": { "maxDuration": 30 }
-  },
   "crons": [
     { "path": "/api/webhooks?job=weekly-insights", "schedule": "0 20 * * 0" },
     { "path": "/api/webhooks?job=streak-check", "schedule": "0 1 * * *" },
