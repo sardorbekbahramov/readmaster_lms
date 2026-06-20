@@ -26,7 +26,7 @@
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-tabs": "^1.1.2",
     "@radix-ui/react-tooltip": "^1.1.6",
-    "@tailwindcss/postcss": "^4.0.0",
+    "@tailwindcss/postcss": "^4.3.1",
     "@tanstack/react-query": "^5.62.0",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.1",
@@ -37,6 +37,7 @@
     "nanoid": "^5.0.8",
     "next": "15.1.0",
     "next-auth": "^5.0.0-beta.25",
+    "postcss": "^8.5.15",
     "prisma": "^5.22.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -44,6 +45,7 @@
     "resend": "^4.0.1",
     "sharp": "^0.33.5",
     "tailwind-merge": "^2.5.5",
+    "tailwindcss": "^4.3.1",
     "typescript": "^5",
     "zod": "^3.23.8",
     "zustand": "^4.5.5"
@@ -56,8 +58,6 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^9",
     "eslint-config-next": "15.1.0",
-    "postcss": "^8.5.15",
-    "tailwindcss": "^4.0.0",
     "tsx": "^4.19.2"
   }
 }
