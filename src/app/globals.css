@@ -25,7 +25,7 @@
   --radius-sm: calc(var(--radius) - 4px);
 }
 
-/* HSL qiymatlaringiz o'z joyida qoladi */
+/* HSL qiymatlaringiz to'liq holatda */
 :root {
   --background: 0 0% 100%;
   --foreground: 222.2 84% 4.9%;
@@ -47,8 +47,8 @@
   --radius: 0.5rem;
 }
 
-/* Global stillar */
-@utility * {
+/* Global native CSS selektorlari (Xatolik bermaydigan qismi) */
+* {
   border-color: hsl(var(--border));
 }
 
@@ -57,7 +57,7 @@ body {
   color: hsl(var(--foreground));
 }
 
-/* Sizning maxsus klasslaringiz */
+/* Sizning maxsus klasslaringiz va skroller sozlamalari */
 .reading-text {
   font-family: Georgia, 'Times New Roman', serif;
   line-height: 1.8;
@@ -68,6 +68,7 @@ body {
 ::-webkit-scrollbar-track { background: #f1f5f9; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 
+/* Animatsiyalar */
 @keyframes slide-in-from-top-2 {
   from { transform: translateY(-8px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
@@ -80,6 +81,7 @@ body {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
 .animate-in { animation: fade-in 0.25s ease-out; }
 .slide-in-from-top-2    { animation: slide-in-from-top-2    0.2s ease-out; }
 .slide-in-from-bottom-4 { animation: slide-in-from-bottom-4 0.3s ease-out; }
