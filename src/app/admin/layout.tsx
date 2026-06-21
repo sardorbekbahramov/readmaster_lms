@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/config"
+import { auth } from "@/lib/auth/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { Shield, Home, Users, UserCog, FileText, BarChart3, Settings } from "lucide-react"

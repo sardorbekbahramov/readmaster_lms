@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/config"
+import { auth } from "@/lib/auth/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/db/prisma"
 import { FileText, CheckCircle, Circle } from "lucide-react"

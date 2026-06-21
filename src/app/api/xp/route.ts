@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth/config"
+import { auth } from "@/lib/auth/auth"
 import { awardXP, type XpReason } from "@/lib/gamification/xp.service"
 import { updateStreak } from "@/lib/gamification/streak.service"
 import { evaluateAchievements } from "@/lib/gamification/achievement.service"

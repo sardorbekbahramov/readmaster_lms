@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/config"
+import { auth } from "@/lib/auth/auth"
 import { redirect } from "next/navigation"
 import { getStudentUnitProgress } from "@/lib/db/queries/progress.queries"
 import Link from "next/link"

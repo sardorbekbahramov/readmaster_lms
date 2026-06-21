@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth/config"
+import { auth } from "@/lib/auth/auth"
 import { prisma } from "@/lib/db/prisma"
 import { awardXP } from "@/lib/gamification/xp.service"
 import { updateStreak } from "@/lib/gamification/streak.service"

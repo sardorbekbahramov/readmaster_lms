@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/config"
+import { auth } from "@/lib/auth/auth"
 import { redirect } from "next/navigation"
 import { prisma } from "@/lib/db/prisma"
 import { VocabularyClient } from "../vocabulary/vocabulary-client"

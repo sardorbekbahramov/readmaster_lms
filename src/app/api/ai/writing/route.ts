@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth/config"
+import { auth } from "@/lib/auth/auth"
 import { prisma } from "@/lib/db/prisma"
 import { evaluateWriting } from "@/lib/ai/modules/writing-evaluator"
 import { writingSubmitSchema } from "@/lib/validations/progress.schema"

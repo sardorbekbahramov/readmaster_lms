@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth/config"
+import { auth } from "@/lib/auth/auth"
 import { prisma } from "@/lib/db/prisma"
 import { z } from "zod"
 const schema = z.object({ enrollmentId: z.string().cuid(), lessonId: z.string().cuid(), stepTypeId: z.number().int().min(1).max(10) })
