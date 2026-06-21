@@ -1,5 +1,6 @@
 "use client"
-import { useState } from "react"
+
+import { useState, Suspense } from "react" // <-- Suspense import qilindi
 import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
@@ -8,19 +9,26 @@ import { loginSchema, type LoginInput } from "@/lib/validations/auth.schema"
 import { Button } from "@/components/ui/button"
 import { BookOpen, Loader2, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
-export default function LoginPage() {
+
+// 1. Asosiy mantiqni LoginForm komponentiga o'giramiz
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard"
   const [showPw, setShowPw] = useState(false)
   const [authError, setAuthError] = useState<string|null>(null)
-  const { register, handleSubmit, formState:{errors,isSubmitting} } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) })
+  
+  const { register, handleSubmit, formState:{errors,isSubmitting} } = useForm<LoginInput>({ 
+    resolver: zodResolver(loginSchema) 
+  })
+  
   const onSubmit = async (data: LoginInput) => {
     setAuthError(null)
     const result = await signIn("credentials", { email: data.email, password: data.password, redirect: false })
     if (result?.error) { setAuthError("Incorrect email or password."); return }
     router.push(callbackUrl); router.refresh()
   }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -55,5 +63,18 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// 2. Next.js 15 talab qilganidek, asosiy sahifani Suspense ichida eksport qilamiz
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   )
 }
