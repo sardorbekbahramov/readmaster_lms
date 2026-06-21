@@ -1,5 +1,6 @@
 "use client"
-import { useState } from "react"
+
+import { useState, Suspense } from "react" // <-- Suspense import qilindi
 import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -7,23 +8,40 @@ import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/validations/
 import { Button } from "@/components/ui/button"
 import { BookOpen, Loader2, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
-export default function ResetPasswordPage() {
+
+// 1. Asosiy mantiq va dizaynni alohida ResetPasswordForm komponentiga olamiz
+function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get("token") ?? ""
   const [showPw, setShowPw] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string|null>(null)
-  const { register, handleSubmit, formState:{errors,isSubmitting} } = useForm<ResetPasswordInput>({ resolver: zodResolver(resetPasswordSchema) })
+  
+  const { register, handleSubmit, formState:{errors,isSubmitting} } = useForm<ResetPasswordInput>({ 
+    resolver: zodResolver(resetPasswordSchema) 
+  })
+  
   const onSubmit = async (data: ResetPasswordInput) => {
     setError(null)
     try {
-      const res = await fetch("/api/auth/reset-password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token,password:data.password})})
-      if (!res.ok){const d=await res.json();setError(d.error??"Reset failed.");return}
+      const res = await fetch("/api/auth/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password: data.password })
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        setError(d.error ?? "Reset failed.")
+        return
+      }
       setSuccess(true)
-      setTimeout(()=>router.push("/login"),2000)
-    } catch { setError("Something went wrong.") }
+      setTimeout(() => router.push("/login"), 2000)
+    } catch { 
+      setError("Something went wrong.") 
+    }
   }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -68,5 +86,18 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+// 2. Next.js build paytida qulab tushmasligi uchun sahifani Suspense bilan o'rab eksport qilamiz
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   )
 }
