@@ -1,5 +1,11 @@
+"use client"
+
+// 1. Next.js 15 ning Tailwind v4 bilan prerender bug'ini chetlab o'tish uchun dynamic render yoqamiz
+export const dynamic = "force-dynamic";
+
 import Link from "next/link"
 import { BookOpen, Zap, Trophy, Users, CheckCircle, Brain } from "lucide-react"
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
