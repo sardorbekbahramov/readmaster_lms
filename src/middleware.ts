@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import { authConfig } from "@/lib/auth/config"; // Faqat yengil konfigratsiyani olamiz
+import { authConfig } from "@/lib/auth/config"; // To'g'ri manzil: config fayli!
 import { NextResponse } from "next/server";
 
 // NextAuth-ni yengil config bilan ishga tushirib, undan xavfsiz auth-ni ajratib olamiz
